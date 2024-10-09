@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="UTF-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+      <title>간단한 지도 표시하기</title>
+      <script src="./jquery-1.9.1.js"></script>
+      <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=&submodules=drawing,geocoder&callback=initMap"></script>
+      <script type="text/javascript">
+          
+          var home = N.LatLng(37.6289635, 126.8255385);
+          
+          var map = null;
+          
+          window.navermap_authFailure = function () {
+              // 인증 실패 시 처리 코드 작성
+              alert("인증실패");
+          }    
+
+          function initMap() {
+
+            var mapOptions = {
+                center: home,
+                zoom: 10
+            };            
+            // param1: 표시될 DOM id
+            map = new N.Map('map',mapOptions);
+            var marker = getCenterMarker();
+            
+            // bindClickEvent(marker);
+            bindKVO();
+          }
+          
+          function getCenterMarker() {
+            
+            var markerOptions = {
+                position: map.getCenter(),
+                map: map,
+                title: '내 위치'
+            };
+
+            return new N.Marker(markerOptions);
+          }
+          
+          function bindClickEvent(marker) {
+            
+            var mapElement = map.getElement();
+            // map 과 click 이벤트 핸들러를 연결 
+            var listener = N.Event.addDOMListener(mapElement, 'click', function() {
+                map.setZoom(8);
+                map.setCenter(marker.getPosition());
+                // N.Event.removeDOMListener(listener);
+            });
+          } 
+          
+          function bindKVO() {
+            
+            var contentEl = $('<div class="iw_inner" style="width:350px;position:absolute;top:0;right:0;z-index:1000;background-color:#fff;border:solid 1px #333;">'
+                + '<h3>Map States</h3>'
+                + '<p style="font-size:14px;">zoom : <em class="zoom">'+ map.getZoom() +'</em></p>'
+                + '<p style="font-size:14px;">center : <em class="center">'+ map.getCenter() +'</em></p>'
+                + '<p style="font-size:14px;">bounds : <em class="bounds">'+ map.getBounds() +'</em></p>'
+                + '</div>');
+
+            contentEl.appendTo(map.getElement());
+
+            naver.maps.Event.addListener(map, 'zoom_changed', function(zoom) {
+                contentEl.find('.zoom').text(zoom);
+            });
+
+            N.Event.addListener(map, 'bounds_changed', function(bounds) {
+                contentEl.find('.center').text(map.getCenter());
+                contentEl.find('.bounds').text(bounds);
+            });
+   
+          }
+                   
+          function toCenter() {
+            map.setCenter(home);
+          }      
+          function setZoomLevel() {
+            const txtZoom = document.getElementById("txtZoom");
+            let zoomLevel = parseInt(txtZoom.value);
+            if (zoomLevel > 20) zoomLevel = 20;
+            if (zoomLevel < 10) zoomLevel = 10;
+            map.setZoom(zoomLevel);
+          }  
+      </script>
+    </head>  
+  <body>
+    <div id="map" style="width:400px;height:400px;"></div>
+    <div>
+      <input type="button" value="중앙으로" onclick="toCenter();" />
+      <input type="text" id="txtZoom" value="10" />
+      <input type="button" value="zoom설정" onclick="setZoomLevel();" />
+    </div>
+    <div class="iw_inner" style="width:350px;position:absolute;top:0;right:0;z-index:1000;background-color:#fff;border:solid 1px #333;">
+      <h3>Map States</h3>
+      <p style="font-size:14px;">zoom : <em class="zoom">'+ map.getZoom() +'</em></p>
+      <p style="font-size:14px;">center : <em class="center">'+ map.getCenter() +'</em></p>
+      <p style="font-size:14px;">bounds : <em class="bounds">'+ map.getBounds() +'</em></p>
+    </div>
+  </body>  
+</html>

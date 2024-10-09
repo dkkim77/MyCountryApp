@@ -1,4 +1,11 @@
 target/
+
+.factorypath
+.project
+.classpath
+.settings/
+bin/
+
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
