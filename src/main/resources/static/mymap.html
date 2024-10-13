@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
       <title>간단한 지도 표시하기</title>
       <script src="./jquery-1.9.1.js"></script>
-      <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=5gjdgfec92&submodules=drawing,geocoder&callback=initMap"></script>
+      <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=&submodules=drawing,geocoder&callback=initMap"></script>
       <script type="text/javascript">
           
           var home = N.LatLng(37.6289635, 126.8255385);
@@ -14,7 +14,7 @@
           var heangshin = N.LatLng(37.623446, 126.835039);
           
           // 1000 개의 마커 만들기 
-          MARKER_COUNT = 100;
+          MARKER_COUNT = 1000;
           markers = [];
           
           var map = null;
@@ -33,7 +33,7 @@
             // param1: 표시될 DOM id
             map = new N.Map('map',mapOptions);
             var marker = showCenterMarker();
-            
+
             initMarkers();
             // showMarker(hwajung, '화정');
             // showMarker(heangshin, '행신');
@@ -46,8 +46,8 @@
             // N : 37.800000, W : 126.320000
             // S : 36.400000, E : 129.400000
             for (var i=0; i < MARKER_COUNT; i++) {
-              let lat = rangeRandom(36, 37);
-              let lng = rangeRandom(126, 129);
+              let lat = rangeRandom(36, 37, 6);
+              let lng = rangeRandom(126, 129, 6);
               
               let strlat = ""+lat;
               let strlng = ""+lng;
@@ -59,9 +59,10 @@
             }
           }
 
-          function rangeRandom(min, max) {
+          function rangeRandom(min, max, scale) {
 
-            return Math.random() * (max - min) + min;
+            let result = Math.random() * (max - min) + min;
+            return result.toFixed(scale);
           }
           
           // 기본 조작          
@@ -141,15 +142,16 @@
           
           /*************************************************
            *        지도 영역 안에 있는 마커만 표시 
-           *************************************************/               
+           *************************************************/  
+           /*            
            naver.maps.Event.addListener(map, 'zoom_changed', function() {
                updateMarkers(map, markers);
            });
-
+            
            naver.maps.Event.addListener(map, 'dragend', function() {
                updateMarkers(map, markers);
            });
-
+           */
            function updateMarkers(map, markers) {
 
                var mapBounds = map.getBounds();
@@ -157,7 +159,7 @@
 
                for (var i = 0; i < markers.length; i++) {
 
-                   marker = markers[i]
+                   marker = markers[i];
                    position = marker.getPosition();
 
                    if (mapBounds.hasLatLng(position)) {
