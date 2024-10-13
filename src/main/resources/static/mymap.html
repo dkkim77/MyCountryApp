@@ -6,10 +6,16 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
       <title>간단한 지도 표시하기</title>
       <script src="./jquery-1.9.1.js"></script>
-      <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=&submodules=drawing,geocoder&callback=initMap"></script>
+      <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=5gjdgfec92&submodules=drawing,geocoder&callback=initMap"></script>
       <script type="text/javascript">
           
           var home = N.LatLng(37.6289635, 126.8255385);
+          var hwajung = N.LatLng(37.630413, 126.828216);
+          var heangshin = N.LatLng(37.623446, 126.835039);
+          
+          // 1000 개의 마커 만들기 
+          MARKER_COUNT = 100;
+          markers = [];
           
           var map = null;
           
@@ -17,7 +23,7 @@
               // 인증 실패 시 처리 코드 작성
               alert("인증실패");
           }    
-
+          // 지도 초기화 
           function initMap() {
 
             var mapOptions = {
@@ -26,13 +32,52 @@
             };            
             // param1: 표시될 DOM id
             map = new N.Map('map',mapOptions);
-            var marker = getCenterMarker();
+            var marker = showCenterMarker();
+            
+            initMarkers();
+            // showMarker(hwajung, '화정');
+            // showMarker(heangshin, '행신');
             
             // bindClickEvent(marker);
-            bindKVO();
+            // bindKVO();
           }
           
-          function getCenterMarker() {
+          function initMarkers() {
+            // N : 37.800000, W : 126.320000
+            // S : 36.400000, E : 129.400000
+            for (var i=0; i < MARKER_COUNT; i++) {
+              let lat = rangeRandom(36, 37);
+              let lng = rangeRandom(126, 129);
+              
+              let strlat = ""+lat;
+              let strlng = ""+lng;
+              
+              let latLng = N.LatLng(lat, lng);
+              let marker = drawMarker(latLng, strlat+","+ strlng);
+              
+              markers.push(marker);
+            }
+          }
+
+          function rangeRandom(min, max) {
+
+            return Math.random() * (max - min) + min;
+          }
+          
+          // 기본 조작          
+          function toCenter() {
+            map.setCenter(home);
+          }      
+          function setZoomLevel() {
+            const txtZoom = document.getElementById("txtZoom");
+            let zoomLevel = parseInt(txtZoom.value);
+            if (zoomLevel > 20) zoomLevel = 20;
+            if (zoomLevel < 10) zoomLevel = 10;
+            map.setZoom(zoomLevel);
+          }  
+          
+          // 마커 표시 
+          function showCenterMarker() {
             
             var markerOptions = {
                 position: map.getCenter(),
@@ -42,7 +87,7 @@
 
             return new N.Marker(markerOptions);
           }
-          
+          // marker 위치를 중심으로 지도 이동  
           function bindClickEvent(marker) {
             
             var mapElement = map.getElement();
@@ -63,7 +108,8 @@
                 + '<p style="font-size:14px;">bounds : <em class="bounds">'+ map.getBounds() +'</em></p>'
                 + '</div>');
 
-            contentEl.appendTo(map.getElement());
+            var mapElement = map.getElement();
+            contentEl.appendTo(mapElement);
 
             naver.maps.Event.addListener(map, 'zoom_changed', function(zoom) {
                 contentEl.find('.zoom').text(zoom);
@@ -75,17 +121,64 @@
             });
    
           }
-                   
-          function toCenter() {
-            map.setCenter(home);
-          }      
-          function setZoomLevel() {
-            const txtZoom = document.getElementById("txtZoom");
-            let zoomLevel = parseInt(txtZoom.value);
-            if (zoomLevel > 20) zoomLevel = 20;
-            if (zoomLevel < 10) zoomLevel = 10;
-            map.setZoom(zoomLevel);
-          }  
+          // 마커 표시
+          function drawMarker(latLng, title) {
+            
+            var markerOptions = {
+                position: latLng,
+                map: map,
+                title: title,
+                icon: {
+                  url: 'ship.png',
+                  size: new naver.maps.Size(22, 35),
+                  origin: new naver.maps.Point(0, 0),
+                  anchor: new naver.maps.Point(11, 35)
+                }
+            };
+
+            return new N.Marker(markerOptions);
+          }
+          
+          /*************************************************
+           *        지도 영역 안에 있는 마커만 표시 
+           *************************************************/               
+           naver.maps.Event.addListener(map, 'zoom_changed', function() {
+               updateMarkers(map, markers);
+           });
+
+           naver.maps.Event.addListener(map, 'dragend', function() {
+               updateMarkers(map, markers);
+           });
+
+           function updateMarkers(map, markers) {
+
+               var mapBounds = map.getBounds();
+               var marker, position;
+
+               for (var i = 0; i < markers.length; i++) {
+
+                   marker = markers[i]
+                   position = marker.getPosition();
+
+                   if (mapBounds.hasLatLng(position)) {
+                       showMarker(map, marker);
+                   } else {
+                       hideMarker(map, marker);
+                   }
+               }
+           }
+
+           function showMarker(map, marker) {
+
+               if (marker.setMap()) return;
+               marker.setMap(map);
+           }
+
+           function hideMarker(map, marker) {
+
+               if (!marker.setMap()) return;
+               marker.setMap(null);
+           }
       </script>
     </head>  
   <body>
@@ -95,7 +188,10 @@
       <input type="text" id="txtZoom" value="10" />
       <input type="button" value="zoom설정" onclick="setZoomLevel();" />
     </div>
-    <div class="iw_inner" style="width:350px;position:absolute;top:0;right:0;z-index:1000;background-color:#fff;border:solid 1px #333;">
+    <!--div class="iw_inner" style="width:350px;position:absolute;top:0;right:0;z-index:1000;background-color:#fff;border:solid 1px #333;" -->
+    <br/><br/><br/>
+    
+    <div style="width:350px;background-color:#fff;border:solid 1px #333;">  
       <h3>Map States</h3>
       <p style="font-size:14px;">zoom : <em class="zoom">'+ map.getZoom() +'</em></p>
       <p style="font-size:14px;">center : <em class="center">'+ map.getCenter() +'</em></p>
